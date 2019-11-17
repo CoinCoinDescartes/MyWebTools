@@ -117,18 +117,28 @@
 	background: hsl(150, var(--saturation), 50%);
 }
 
+#main-form > p {
+	text-align: left;
+}
 
 #output-h, #output-s, #output-l,
 #output-r, #output-g, #output-b,
-#output-c, #output-m, #output-y, #output-k {
+#output-c, #output-m, #output-y, #output-k,
+#output-y2, #output-u, #output-v {
 	width: 40px;
 	padding: 5px;
 }
 #output-hsl, #output-rgb, #output-cmyk {
-	width: 150px;
+	width: 190px;
 }
 #output-hex {
 	width: 100px;
+}
+
+span.label {
+	width: 100px;
+	text-align: right;
+	display: inline-block;
 }
 
 	</style>
@@ -150,14 +160,18 @@
 
 <div id="output-preview"></div>
 
-<p>HSL :
+<p><span class="label">Hexadécimal :</span>
+	<input id="output-hex" type="text" class="text" value="#00FF80" onchange="setColor(this)" />
+</p>
+
+<p><span class="label">HSL :</span>
 	<input id="output-h" type="number" min="0" max="360" class="text" value="" onchange="setColor(this)" />
 	<input id="output-s" type="number" min="0" max="100" class="text" value="" onchange="setColor(this)" />
 	<input id="output-l" type="number" min="0" max="100" class="text" value="" onchange="setColor(this)" />
 
 	<input id="output-hsl" type="text" class="text" value="" onchange="setColor(this)" />
 </p>
-<p>RGB :
+<p><span class="label">RGB :</span>
 	<input id="output-r" type="number" min="0" max="255" class="text" value="" onchange="setColor(this)" />
 	<input id="output-g" type="number" min="0" max="255" class="text" value="" onchange="setColor(this)" />
 	<input id="output-b" type="number" min="0" max="255" class="text" value="" onchange="setColor(this)" />
@@ -165,7 +179,7 @@
 	<input id="output-rgb" type="text" class="text" value="" onchange="setColor(this)" />
 </p>
 
-<p style="padding-left: 55px;">CMYK :
+<p><span class="label">CMYK :</span>
 	<input id="output-c" type="number" min="0" max="100" class="text" value="" onchange="setColor(this)" />
 	<input id="output-m" type="number" min="0" max="100" class="text" value="" onchange="setColor(this)" />
 	<input id="output-y" type="number" min="0" max="100" class="text" value="" onchange="setColor(this)" />
@@ -174,8 +188,10 @@
 	<input id="output-cmyk" type="text" class="text" value="" onchange="setColor(this)" />
 </p>
 
-<p>Hexadécimal :
-	<input id="output-hex" type="text" class="text" value="#00FF80" onchange="setColor(this)" />
+<p><span class="label">Y’UV :</span>
+	<input id="output-y2" type="number" min="0" max="255" class="text" value="" onchange="setColor(this)" />
+	<input id="output-u" type="number" min="0" max="255" class="text" value="" onchange="setColor(this)" />
+	<input id="output-v" type="number" min="0" max="255" class="text" value="" onchange="setColor(this)" />
 </p>
 
 </section>
@@ -186,7 +202,13 @@
 'use strict'
 
 // MAIN COORDS / COLOR VARS
-var color = {H: null, S: 100, L: null, R: null, G: null, B: null, HEX: null, C: null, M: null, Y: null, K: null};
+var color = {
+	HEX: null,
+	H: null, S: 100, L: null,
+	R: null, G: null, B: null,
+	C: null, M: null, Y: null, K: null,
+	Yy: null, U: null, V: null
+};
 
 // init initial color
 window.addEventListener("load", function() {
@@ -386,6 +408,25 @@ function setColor(t) {
 			cmykToHsl(color);
 			break;
 
+		// if we changed Y, U or V, update Y, U, V and compute new HSL.
+		case 'output-y2':
+			color.Yy = parseFloat(t.value);
+			yuvToRgb(color);
+			rgbToHsl(color);
+			break;
+		case 'output-u':
+			color.U = parseFloat(t.value);
+			yuvToRgb(color);
+			rgbToHsl(color);
+			break;
+		case 'output-v':
+			color.V = parseFloat(t.value);
+			yuvToRgb(color);
+			rgbToHsl(color);
+			break;
+
+
+
 	}
 
 
@@ -415,6 +456,7 @@ function updateOutputs() {
 	hslToRgb(color);
 	rgbToHex(color);
 	rgbToCmyk(color);
+	rgbToYuv(color);
 
 	// update in CSS
 	document.documentElement.style.setProperty('--saturation', color.S+'%');
@@ -422,6 +464,7 @@ function updateOutputs() {
 	// preview
 	outputPreview.style.background = 'hsl('+Math.round(color.H)+', '+(color.S).toFixed(2)+'%, '+(color.L).toFixed(2)+'%)';
 
+	document.getElementById('output-hex').value = color.HEX;
 
 	document.getElementById('output-h').value = Math.round(color.H);
 	document.getElementById('output-s').value = Math.round(color.S);
@@ -439,7 +482,10 @@ function updateOutputs() {
 	document.getElementById('output-k').value = Math.round(color.K);
 	document.getElementById('output-cmyk').value = 'cmyk('+Math.round(color.C)+'%,'+Math.round(color.M)+'%,'+Math.round(color.Y)+'%,'+Math.round(color.K)+'%)';
 
-	document.getElementById('output-hex').value = color.HEX;
+	document.getElementById('output-y2').value = Math.round(color.Yy);
+	document.getElementById('output-u').value = Math.round(color.U);
+	document.getElementById('output-v').value = Math.round(color.V);
+
 
 }
 
@@ -451,28 +497,28 @@ function hslToRgb(color) {
 
     var r, g, b;
 
-    if (s == 0) {
-        r = g = b = l; // achromatic
-    } else {
-        var hue2rgb = function hue2rgb(p, q, t){
-            if (t < 0) t += 1;
-            if (t > 1) t -= 1;
-            if (t < 1/6) return p + (q - p) * 6 * t;
-            if (t < 1/2) return q;
-            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-            return p;
-        }
+	if (s == 0) {
+		r = g = b = l; // achromatic
+	} else {
+		var hue2rgb = function hue2rgb(p, q, t){
+			if (t < 0) t += 1;
+			if (t > 1) t -= 1;
+			if (t < 1/6) return p + (q - p) * 6 * t;
+			if (t < 1/2) return q;
+			if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+			return p;
+		}
 
-        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        var p = 2 * l - q;
-        r = hue2rgb(p, q, h + 1/3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1/3);
-    }
+		var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+		var p = 2 * l - q;
+		r = hue2rgb(p, q, h + 1/3);
+		g = hue2rgb(p, q, h);
+		b = hue2rgb(p, q, h - 1/3);
+	}
 
-    color.R = r * 255;
-    color.G = g * 255;
-    color.B = b * 255;
+	color.R = r * 255;
+	color.G = g * 255;
+	color.B = b * 255;
 }
 
 function rgbToHsl(color) {
@@ -576,6 +622,56 @@ function cmykToHsl(color) {
 	rgbToHsl(color);
 }
 
+function rgbToYuv(color) {
+	var r = color.R;
+	var g = color.G;
+	var b = color.B;
+
+	var y, u, v;
+
+	y = r *  .299000 + g *  .587000 + b *  .114000
+	u = r * -.168736 + g * -.331264 + b *  .500000 + 128
+	v = r *  .500000 + g * -.418688 + b * -.081312 + 128
+
+	color.Yy = Math.round(y);
+	color.U = Math.round(u);
+	color.V = Math.round(v);
+
+}
+
+
+
+
+function yuvToRgb(color) {
+	var y = color.Yy;
+	var u = color.U;
+	var v = color.V;
+
+	var r, g, b;
+
+	r = y + 1.4075 * (v - 128);
+	g = y - 0.3455 * (u - 128) - (0.7169 * (v - 128));
+	b = y + 1.7790 * (u - 128);
+
+	r = Math.floor(r);
+	g = Math.floor(g);
+	b = Math.floor(b);
+
+	r = (r < 0) ? 0 : r;
+	r = (r > 255) ? 255 : r;
+
+	g = (g < 0) ? 0 : g;
+	g = (g > 255) ? 255 : g;
+
+	b = (b < 0) ? 0 : b;
+	b = (b > 255) ? 255 : b;
+
+	color.R = r;
+	color.G = g;
+	color.B = b;
+
+}
+
 
 /* ]]> */
 </script>
@@ -583,7 +679,7 @@ function cmykToHsl(color) {
 
 # adresse de la page : https://lehollandaisvolant.net/tout/tools/color/
 #      page créée le : 31 mars 2013
-#     mise à jour le : 10 novembre 2018
+#     mise à jour le : 19 octobre 2019
 
 -->
 </body>

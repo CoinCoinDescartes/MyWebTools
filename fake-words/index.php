@@ -217,35 +217,39 @@ function inventWords() {
 
 		// begin word with First letter.
 		var firstLetter = weightedRand2(probsMatrix.firstLetters.l1);
-		word += firstLetter;
 
-		// continue with second letter
-		// we do this because the chain is of length 3. So we manually pick 2 letters to begin
-		var secondLetter = weightedRand2(probsMatrix.firstLetters.l2[firstLetter]);
-		word += secondLetter;
+		if (firstLetter !== undefined) {
+			word += firstLetter;
 
-		// we have our two letters to start with. Now use a loop to select more letters
-		var letterNminus2 = firstLetter;
-		var letterNminus1 = secondLetter;
+			// continue with second letter
+			// we do this because the chain is of length 3. So we manually pick 2 letters to begin
+			var secondLetter = weightedRand2(probsMatrix.firstLetters.l2[firstLetter]);
+			word += secondLetter;
 
-		for (var i = 0 ; i < (wordLength-2) ; i++) {
-			var nextLetter = weightedRand2(probsMatrix[letterNminus2][letterNminus1]);
-			word += nextLetter;
-			letterNminus2 = letterNminus1;
-			letterNminus1 = nextLetter;
+			// we have our two letters to start with. Now use a loop to select more letters
+			var letterNminus2 = firstLetter;
+			var letterNminus1 = secondLetter;
+
+			for (var i = 0 ; i < (wordLength-2) ; i++) {
+				var nextLetter = weightedRand2(probsMatrix[letterNminus2][letterNminus1]);
+				word += nextLetter;
+				letterNminus2 = letterNminus1;
+				letterNminus1 = nextLetter;
+			}
+
+			// last letter : check current letter and gives out the array of the last letters that follow current letter
+			var lastLetters = probsMatrix.lastLetters[letterNminus1]
+			word += weightedRand2(lastLetters);
+
+			// displays the word.
+			var spanNode = document.createElement('span');
+			spanNode.appendChild(document.createTextNode( word ));
+			outputNode.insertBefore(spanNode, outputNode.firstChild)
+			spanNode.classList.add(document.getElementById('selectLanguage').value);
+
+			//console.log(lastLet);
 		}
 
-		// last letter : check current letter and gives out the array of the last letters that follow current letter
-		var lastLetters = probsMatrix.lastLetters[letterNminus1]
-		word += weightedRand2(lastLetters);
-
-		// displays the word.
-		var spanNode = document.createElement('span');
-		spanNode.appendChild(document.createTextNode( word ));
-		outputNode.insertBefore(spanNode, outputNode.firstChild)
-		spanNode.classList.add(document.getElementById('selectLanguage').value);
-
-		//console.log(lastLet);
 	}
 }
 

@@ -48,6 +48,8 @@ var alphabet = 'abcdefghijklmnopqrstuvwxyzðỳýéàáâçèêäëûôōòóõ�
 // var alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяієїґ'.split('');
 // greek
 // var alphabet = 'αβγδεζηθικλμνξοπρστυφχψωάϊόέήίώύΰΐϋ'.split('');
+// polish
+var alphabet = 'abcdefghijklmnopqrstuvwxyzðỳýéàáâçèêäëûôōòóõøöåůïĩíìîœþůúùüñşščžťľßăńřćãāśňĐďĺŕěũũųėģīąęŋłńóśżź'.split('');
 
 console.log(alphabet)
 var probsMatrix = new Object();

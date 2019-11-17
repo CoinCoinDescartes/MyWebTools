@@ -98,7 +98,7 @@ abbr[title] {
 	<label for="source">Quantité : </label><br/>
 	<input type="number" onchange="convert();" step="1" min="2" max="10000000000" id="source" value="1024" name="source" placeholder="1024" class="text" />
 	<select name="unite_i" id="unite_i" onchange="convert();">
-		<optgroup label="Préfixes normaux">
+		<optgroup label="Préfixes décimaux (SI)">
 			<option value="o">o (octet)</option>
 			<option value="k" selected>ko (kilooctet)</option>
 			<option value="m">Mo (mégaoctet)</option>
@@ -109,14 +109,14 @@ abbr[title] {
 			<option value="z">Zo (zettaoctet)</option>
 
 		</optgroup>
-		<optgroup label="Préfixes binaires">
+		<optgroup label="Préfixes binaires (CEI)">
 			<option value="ki">kio (kibioctet)</option>
 			<option value="mi">Mio (mébioctet)</option>
 			<option value="gi">Gio (gibioctet)</option>
 			<option value="ti">Tio (tebioctet)</option>
-			<option value="pi">Po (pétaoctet)</option>
-			<option value="ei">Eo (exaoctet)</option>
-			<option value="zi">Zo (zettaoctet)</option>
+			<option value="pi">Pio (pébioctet)</option>
+			<option value="ei">Eio (exbioctet)</option>
+			<option value="zi">Zio (zebioctet)</option>
 		</optgroup>
 	</select>
 

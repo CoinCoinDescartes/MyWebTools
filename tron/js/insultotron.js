@@ -2,15 +2,15 @@ function insultotron() {
 
 
 	var a_1 = new Array(
-		'Espece de'
+		'Espèce de'
 	);
 
 	var a_2 = new Array(
 		'petit salaud',
 		'vieux batard',
 		'gros fils de pute',
-		'viel enculé',
-		'sale pédé',
+		'vieil enculé',
+		'sale connard',
 		'grosse vache'
 	);
 
@@ -23,13 +23,13 @@ function insultotron() {
 	);
 
 	var a_4 = new Array(
-		'tu pue comme',
+		'tu pues comme',
 		'tu es',
 		'tu as la forme d\'',
 		'tu pourrais être',
-		'tu ressemble à',
-		'tu vaux pas mieu que',
-		'tu me fais penser a'
+		'tu ressembles à',
+		'tu vaux pas mieux que',
+		'tu me fais penser à'
 	);
 
 	var a_5 = new Array(
@@ -48,7 +48,7 @@ function insultotron() {
 	);
 
 	var a_7 = new Array(
-		't\'éclater la geule',
+		't\'éclater la gueule',
 		'te brûler la cervelle',
 		't\'éclater la tête',
 		'te broyer les couilles'
@@ -56,8 +56,8 @@ function insultotron() {
 
 	var a_8 = new Array(
 		'gros con.',
-		'salle con.',
-		'salle pute.'
+		'sale con.',
+		'sale pute.'
 	);
 
 	choose = function(tableau) {

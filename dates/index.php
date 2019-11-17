@@ -107,12 +107,12 @@ input:invalid {
 
 	<p class="centrer">
 		<label for="f-y">Date 2&nbsp;: </label> 
-		<input type="number" onkeyup="return calc_dates('diff');" step="1" min="00" max="9999" id="f-y" value="2000" name="f-y" placeholder="2000" class="text" required /> /
+		<input type="number" onkeyup="return calc_dates('diff');" step="1" min="00" max="9999" id="f-y" value="<?php echo date('Y') ?>" name="f-y" placeholder="<?php echo date('Y') ?>" class="text" required /> /
 		<input type="number" onkeyup="return calc_dates('diff');" step="1" min="01" max="12" id="f-m" value="01" name="f-m" placeholder="01" class="text" required /> /
-		<input type="number" onkeyup="return calc_dates('diff');" step="1" min="01" max="31" id="f-d" value="03" name="f-d" placeholder="03" class="text" required /> à
-		<input type="number" onkeyup="return calc_dates('diff');" step="1" min="00" max="23" id="f-h" value="09" name="f-h" placeholder="09" class="text" required />:
-		<input type="number" onkeyup="return calc_dates('diff');" step="1" min="00" max="59" id="f-i" value="46" name="f-i" placeholder="46" class="text" required />:
-		<input type="number" onkeyup="return calc_dates('diff');" step="1" min="00" max="59" id="f-s" value="16" name="f-s" placeholder="16" class="text" required />
+		<input type="number" onkeyup="return calc_dates('diff');" step="1" min="01" max="31" id="f-d" value="01" name="f-d" placeholder="01" class="text" required /> à
+		<input type="number" onkeyup="return calc_dates('diff');" step="1" min="00" max="23" id="f-h" value="00" name="f-h" placeholder="00" class="text" required />:
+		<input type="number" onkeyup="return calc_dates('diff');" step="1" min="00" max="59" id="f-i" value="00" name="f-i" placeholder="00" class="text" required />:
+		<input type="number" onkeyup="return calc_dates('diff');" step="1" min="00" max="59" id="f-s" value="00" name="f-s" placeholder="00" class="text" required />
 	</p>
 	<p class="centrer">
 		<button type="button" onclick="calc_dates('diff');" name="difference" class="button button-submit">Soustraire</button>
@@ -168,7 +168,7 @@ input:invalid {
 function getdate1() {
 	var date = new Array();
 	date['y'] = parseInt(document.getElementById('i-y').value);
-	date['m'] = parseInt(document.getElementById('i-m').value);
+	date['m'] = parseInt(document.getElementById('i-m').value)-1;
 	date['d'] = parseInt(document.getElementById('i-d').value);
 	date['h'] = parseInt(document.getElementById('i-h').value);
 	date['i'] = parseInt(document.getElementById('i-i').value);
@@ -179,7 +179,7 @@ function getdate1() {
 function getdate2() {
 	var date = new Array();
 	date['y'] = parseInt(document.getElementById('f-y').value);
-	date['m'] = parseInt(document.getElementById('f-m').value);
+	date['m'] = parseInt(document.getElementById('f-m').value)-1;
 	date['d'] = parseInt(document.getElementById('f-d').value);
 	date['h'] = parseInt(document.getElementById('f-h').value);
 	date['i'] = parseInt(document.getElementById('f-i').value);
@@ -215,11 +215,17 @@ function calc_dates(op) {
 	var idate = new Date(date1['y'], date1['m'], date1['d'], date1['h'], date1['i'], date1['s']);
 	var fdate = new Date(date2['y'], date2['m'], date2['d'], date2['h'], date2['i'], date2['s']);
 
+	if (fdate > idate) {
+		var temp = idate;
+		idate = fdate;
+		fdate = temp;
+	}
+
 	// difference between the two dates
 	if (op == 'diff') {
 		document.getElementById('diffdate').style.display = 'block';
 		document.getElementById('sommdate').style.display = 'none';
-		var diff = idate;
+		var diff = new Date();
 		diff.setFullYear(idate.getFullYear()-fdate.getFullYear());
 		diff.setMonth(idate.getMonth()-fdate.getMonth());
 		diff.setDate(idate.getDate()-fdate.getDate());
@@ -228,6 +234,10 @@ function calc_dates(op) {
 		diff.setSeconds(idate.getSeconds()-fdate.getSeconds());
 
 		var dd = parseDateFromVar(diff);
+
+		if (idate.getFullYear() == fdate.getFullYear() && idate.getMonth() == fdate.getMonth() && idate.getDate() ==fdate.getDate()) {
+			dd['y'] = dd['m'] = dd['d'] = 0;
+		}
 
 		// print formated diff date on document.
 		document.getElementById('diffdate-res').innerHTML = dd['y']+' années '+dd['m']+' mois '+dd['d']+' jours '+dd['h']+' heures '+dd['i']+' minutes '+dd['s']+' secondes';
