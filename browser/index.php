@@ -296,7 +296,13 @@ body {
 				<h3>Agent utilisateur :</h3>
 				<p class="text"><?php echo htmlspecialchars($GLOBALS['parsed_UA']['full-UA']); ?></p>
 			</div>
+			<div class="info-block-info">
+				<h3>Date et heure :</h3>
+				<p class="text" id="date-tz"></p>
+			</div>
 		</div>
+
+
 	</div>
 	<!--<p id="buttonshowmore"><button onclick="show_all_info(this)">Plus d’informations ?</button></p>-->
 
@@ -320,10 +326,10 @@ body {
 		<p class="text" id="gpu-mod2">N/A</p>
 	</div>
 
-	<div id="silverlight">
+	<!--<div id="silverlight">
 		<h3>Gyroscope :</h3>
 		<p class="text" id="gyroscope"><noscript>Impossible de déterminer sans JavaScript</noscript></p>
-	</div>
+	</div>-->
 </div>
 
 
@@ -385,7 +391,7 @@ body {
 
 	<div id="pubs">
 		<h3 id="activate-is4ds-h3" class="unknown">Bloqueur de pub :</h3>
-		<p class="text" id="is4ds"><span id="adblock" class="myTestAd ads ad adsbox doubleclick ad-placement carbon-ads">Absent ou Innactif.</span><noscript>Impossible de déterminer sans JavaScript</noscript></p>
+		<p class="text" id="is4ds"><span id="adblock" class="myTestAd ads ad adsbox doubleclick ad-placement carbon-ads">Absent ou inactif.</span><noscript>Impossible de déterminer sans JavaScript</noscript></p>
 	</div>
 
 <!--	<div id="silverlight">
@@ -394,15 +400,6 @@ body {
 	</div>
 -->
 </div>
-
-<div id="socialMedia" class="info-block">
-	<h2>Réseaux sociaux</h2>
-	<p>Vous êtes connectés sur les sites suivants :</p>
-	<p id="socialMedia-NA">N/A</p>
-	<ul id="socialMediaList"></ul>
-	</div>
-</div>
-
 
 <div id="codecs" class="info-block">
 	<h2>Codecs</h2>
@@ -443,7 +440,7 @@ body {
 <footer id="footer"><a href="//lehollandaisvolant.net">by <em>Timo Van Neerden</em></a></footer>
 <iframe id="testiframe" style="display: none"></iframe>
 
-<script src="js/ads.js"></script>
+
 <script>
 'use strict'
 
@@ -543,7 +540,26 @@ function VLCPlugin() {
 	}
 }
 
-// Screen Size
+// Screen Size and refresh rate
+function calcFPS(opts){
+	var requestFrame = window.requestAnimationFrame ||
+		window.webkitRequestAnimationFrame ||
+		window.mozRequestAnimationFrame;
+	if (!requestFrame) return true; // Check if "true" is returned; 
+	// pick default FPS, show error, etc...
+	function checker(){
+		if (index--) requestFrame(checker);
+		else {
+			var result = 3*Math.round(count*1000/3/(performance.now()-start));
+			if (typeof opts.callback === "function") opts.callback(result);
+			document.getElementById('frameRate').textContent = ', ' + result + 'Hz';
+		}
+	}
+	if (!opts) opts = {};
+	var count = opts.count||60, index = count, start = performance.now();
+	checker();
+}
+
 function ScreenSize() {
 	var result = null;
 	var width = window.screen.width;
@@ -564,24 +580,24 @@ function ScreenSize() {
 			zoom = ', Zoom x' + ((Math.round(ratio*100)) / 100); // *100/100 : to round with 2 decimals.
 		}
 	}
-	var size = realWidth + 'x' + realHeight +' ('+ depth + 'Bit' + zoom + ')';
+	var size = realWidth + 'x' + realHeight +' ('+ depth + 'Bit' + zoom + '<span id="frameRate"></span>)';
 	document.getElementById('screen-sizes').innerHTML = size;
 }
 
 
-function checkGyro() {
-	var gyroscopeNode = document.getElementById('gyroscope');
-	gyroscopeNode.innerHTML = 'N/A';
-
-	if (window.DeviceOrientationEvent) {
-		window.addEventListener("deviceorientation", function(event) {
-			if(event.alpha || event.beta || event.gamma) {
-				gyroscopeNode.removeChild(gyroscopeNode.firstChild);
-				gyroscopeNode.appendChild(document.createTextNode('alpha : '+Math.round(event.alpha)+'°, '+'beta : '+Math.round(event.beta)+'°, '+'gamma : '+Math.round(event.gamma)+'°'));
-			}
-		});
-	}
-}
+// function checkGyro() {
+// 	var gyroscopeNode = document.getElementById('gyroscope');
+// 	gyroscopeNode.innerHTML = 'N/A';
+// 
+// 	if (window.DeviceOrientationEvent) {
+// 		window.addEventListener("deviceorientation", function(event) {
+// 			if(event.alpha || event.beta || event.gamma) {
+// 				gyroscopeNode.removeChild(gyroscopeNode.firstChild);
+// 				gyroscopeNode.appendChild(document.createTextNode('alpha : '+Math.round(event.alpha)+'°, '+'beta : '+Math.round(event.beta)+'°, '+'gamma : '+Math.round(event.gamma)+'°'));
+// 			}
+// 		});
+// 	}
+// }
 
 
 // CPU cores
@@ -618,7 +634,7 @@ function gpuInfos() {
 function adblock() {
 	// first test: check is a block with .ad* classes is hidden or not
 	var flagBlock = document.getElementById('adblock');
-	var isBlocked = (window.getComputedStyle(flagBlock, null).getPropertyValue("display") == 'none' ? 'actif' : 'absent ou inactif');
+	var isBlocked = (window.getComputedStyle(flagBlock, null).getPropertyValue("display") == 'none' ? 'Actif' : 'Absent ou inactif');
 	document.getElementById('is4ds').innerHTML = isBlocked;
 
 	// secondth test: check if a ad.js is loaded.
@@ -778,117 +794,22 @@ function ip_local() {
 }
 
 
+// Affiche l’heure et le fuseau horraire.
+function timezone() {
+	var d = new Date();
 
+	var dateString = d.toLocaleString('fr-FR', {weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric", timeZoneName: "short"});
+	// can’t get directly *only* the timezone in JS
+	var tzString = (d.toLocaleDateString('fr-FR', {hour: "numeric", timeZoneName: "long"})).replace(d.toLocaleDateString('fr-FR', {hour: "numeric"}), "");
+	var tzStringNumeric = (d.toLocaleDateString('fr-FR', {hour: "numeric", timeZoneName: "short"})).replace(d.toLocaleDateString('fr-FR', {hour: "numeric"}), "");
 
-// Fait une requête sur une page de connection d’un site, avec une redirection sur une image (le favicon, toujours présente)
-// si l’utilisateur est connecté, la redirection se fait, et la requête renvoie une image, et le img.onload() fonctionne.
-// si l’utilisateur n’est pas connecté, la redirection ne se fait pas, on reste sur la page de login en HTML et le img.onload() ne marche pas.
-function socialNetworkTest() {
-	var networks = [{
-		url: "https://squareup.com/login?return_to=%2Ffavicon.ico",
-		name: "Square"
-	}, {
-		url: "https://www.instagram.com/accounts/login/?next=%2Ffavicon.ico",
-		name: "Instagram"
-	}, {
-		url: "https://twitter.com/login?redirect_after_login=https%3A%2F%2Ftwitter.com%2Ffavicon.ico",
-		name: "Twitter"
-	}, {
-		url: "https://www.facebook.com/login.php?next=https%3A%2F%2Fwww.facebook.com%2Ffavicon.ico%3F_rdr%3Dp",
-		name: "Facebook"
-	}, {
-		url: "https://accounts.google.com/ServiceLogin?passive=true&continue=https%3A%2F%2Fwww.google.com%2Ffavicon.ico&uilel=3&hl=de&service=youtube",
-		name: "Google"
-	}, {
-		url: "https://plus.google.com/up/accounts/upgrade/?continue=https://plus.google.com/favicon.ico",
-		name: "Google Plus"
-	}, {
-		url: "https://login.skype.com/login?message=signin_continue&redirect_uri=https%3A%2F%2Fsecure.skype.com%2Ffavicon.ico",
-		name: "Skype"
-//	}, {
-//		url: "https://www.flickr.com/signin/yahoo/?redir=https%3A%2F%2Fwww.flickr.com/favicon.ico",
-//		name: "Flickr"
-	}, {
-		url: "https://www.spotify.com/de/login/?forward_url=https%3A%2F%2Fwww.spotify.com%2Ffavicon.ico",
-		name: "Spotify"
-	}, {
-		url: "https://www.reddit.com/login?dest=https%3A%2F%2Fwww.reddit.com%2Ffavicon.ico",
-		name: "Reddit"
-	}, {
-		url: "https://www.tumblr.com/login?redirect_to=%2Ffavicon.ico",
-		name: "Tumblr"
-	}, {
-		url: "https://www.expedia.de/user/login?ckoflag=0&selc=0&uurl=qscr%3Dreds%26rurl%3D%252Ffavicon.ico",
-		name: "Expedia"
-	}, {
-		url: "https://www.dropbox.com/login?cont=https%3A%2F%2Fwww.dropbox.com%2Fstatic%2Fimages%2Ficons%2Ficon_spacer-vflN3BYt2.gif",
-		name: "Dropbox"
-	}, {
-		url: "https://www.amazon.com/ap/signin/178-4417027-1316064?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=10000000&openid.return_to=https%3A%2F%2Fwww.amazon.com%2Ffavicon.ico",
-		name: "Amazon US"
-	}, {
-		url: "https://www.amazon.fr/ap/signin?_encoding=UTF8&ignoreAuthState=1&openid.assoc_handle=frflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https://www.amazon.fr/favicon.ico",
-		name: "Amazon FR"
-	}, {
-		url: "https://www.pinterest.com/login/?next=https%3A%2F%2Fwww.pinterest.com%2Ffavicon.ico",
-		name: "Pinterest"
-	}, {
-		url: "https://www.netflix.com/Login?nextpage=%2Ffavicon.ico",
-		name: "Netflix"
-	}, {
-		url: "https://de.foursquare.com/login?continue=%2Ffavicon.ico",
-		name: "Foursquare"
-	}, {
-		url: "https://eu.battle.net/login/de/index?ref=http://eu.battle.net/favicon.ico",
-		name: "Battle.net"
-	}, {
-		url: "https://store.steampowered.com/login/?redir=favicon.ico",
-		name: "Steam"
-	}, {
-		url: "https://www.academia.edu/login?cp=/favicon.ico&cs=www",
-		name: "Academia.edu"
-	}, {
-//		url: "https://stackoverflow.com/users/login?ssrc=head&returnurl=http%3a%2f%2fstackoverflow.com%2ffavicon.ico",
-//		name: "Stack Overflow"
-//	}, {
-		url: "https://accounts.google.com/ServiceLogin?service=blogger&hl=de&passive=1209600&continue=https://www.blogger.com/favicon.ico",
-		name: "Blogger"
-	}, {
-		 url: "https://login.live.com/login.srf?wa=wsignin1.0&wreply=https%3A%2F%2Fprofile.microsoft.com%2FregsysProfilecenter%2FImages%2FLogin.jpg",
-		 name: "Microsoft"
-	 }, {
-		 url: "https://github.com/login?return_to=https%3A%2F%2Fgithub.com%2Ffavicon.ico%3Fid%3D1",
-		 name: "Github"
-	 }, {
-		 url: "https://slack.com/signin?redir=%2Ffavicon.ico",
-		 name: "Slack"
-	 }, {
-		 url: "https://tablet.www.linkedin.com/splash?redirect_url=https%3A%2F%2Fwww.linkedin.com%2Ffavicon.ico%3Fgid%3D54384%26trk%3Dfulpro_grplogo",
-		 name: "Linkedin"
-	 }
-	];
+	document.getElementById('date-tz').textContent = dateString + ' (' + tzString.trim() + ')';
 
-	var listNode = document.getElementById('socialMediaList');
-	networks.forEach(function(network) {
-		var img = document.createElement('img');
-		var li = document.createElement('li');
-		var span = document.createElement('span');
-		img.src = network.url;
-		img.onload = function() {
-			document.getElementById('socialMedia-NA').style.display = 'none';
-
-			li.appendChild(document.createTextNode(network.name + ' : '));
-			span.appendChild(document.createTextNode('connecté'));
-
-			li.appendChild(span);
-			listNode.appendChild(li);
-		};
-		img.onerror = function() {
-			//li.appendChild(document.createTextNode(network.name + ' : non connecté'));
-			//listNode.appendChild(li);
-		};
-	});
 }
+
+
+
+
 
 
 // load directly
@@ -897,20 +818,23 @@ getFlashVersion();
 JavaVersion();
 ScreenSize();
 cpuCores();
-checkGyro();
+//checkGyro(); //deprecated
 gpuInfos();
 VLCPlugin();
+timezone();
 
+setTimeout(function(){
+	calcFPS();
+}, '150');
 
 window.addEventListener("load", function() {
 	// load on page OK
-	adblock();
-	checkIsp();
 	// load after a while
 	setTimeout(function(){
-		socialNetworkTest();
+		adblock();
+		checkIsp();
 		ip_local();
-	}, 500);
+	}, 750);
 
  });
 
@@ -918,12 +842,15 @@ window.addEventListener("load", function() {
 
 
 
+
+
 </script>
+<script src="js/ads.js"></script>
 <!--
 
-# adresse de la page : http://lehollandaisvolant.net/tout/tools/browser/
+# adresse de la page : https://lehollandaisvolant.net/tout/tools/browser/
 #	  page créée le : 5 mars 2013
-#	 mise à jour le : 16 août 2018
+#	 mise à jour le : 17 novembre 2019
 
 -->
 </body>
